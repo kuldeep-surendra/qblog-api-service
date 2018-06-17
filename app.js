@@ -5,8 +5,15 @@ const jwt = require('hapi-auth-jwt2');
 const jwksRsa = require('jwks-rsa');
 require('dotenv').config();
 const routes = require('./config/routes');
-
+const axios = require('axios');
 const server = new Hapi.Server();
+const secret = require('./config/secret');
+const redis = require('redis');
+const env = process.env.NODE_ENV || 'development';
+const config = require(__dirname + '/config/configRedis.json')[env];
+const client = redis.createClient(config);
+require('bluebird').promisifyAll(redis.RedisClient.prototype);
+const ROOT_URL = require('./config/apiConfig');
 
 server.connection({
   port: process.env.PORT || 3001,
@@ -18,51 +25,48 @@ server.connection({
   }
 });
 
-// const registerRoutes = () => {
-//   server.route({
-//     method: 'GET',
-//     path: '/api/public',
-//     config: {
-//       auth: false,
-//       cors: corsHeader,
-//       handler: (req, res) => {
-//         res({
-//           message: "Hello from a public endpoint! You don't need to be authenticated to see this."
-//         });
-//       }
-//     }
-//   });
+client.set('redis', 'working');
+client.get('redis', function (rediserror, reply) {
+  if (rediserror) {
+    console.log(rediserror);
+  }
+  console.log('redis is ' + reply.toString()); // confirm we can access redis
+});
 
-//   server.route({
-//     method: 'GET',
-//     path: '/api/private',
-//     config: {
-//       auth: 'jwt',
-//       cors: corsHeader,
-//       handler: (req, res) => {
-//         res({
-//           message: 'Hello from a private endpoint! You need to be authenticated to see this.'
-//         });
-//       }
-//     }
-//   });
-
-//   server.route({
-//     method: 'GET',
-//     path: '/api/private-scoped',
-//     config: {
-//       auth: {
-//         scope: 'read:messages'
-//       },
-//       cors: corsHeader,
-//       handler: (req, res) => {
-//         res({
-//           message: 'Hello from a private endpoint! You need to be authenticated and have a scope of read:messages to see this.'
-//         });
-//       }
-//     }
-//   });
-// };
+const validateLocalUser = async (decoded, request, callback) => {
+  try {
+    axios({
+      method: 'get', 
+      url: `${ROOT_URL}/getOneUser?email=${request.headers.email}`, 
+      headers: request.headers, 
+    })
+    .then(async(res) => {
+      const user = res.data.user;
+      if(user){
+        var isValid;
+        await client.getAsync(decoded.id).then((reply) => {
+          const session = JSON.parse(reply)
+          if(session.valid === true){
+            isValid = true;
+          }else{
+            isValid = false;
+          }
+        })
+        .catch((err) => {
+          return callback(null, err);
+        })
+        return callback(null, true)
+      }else{
+        return callback(null, false)
+      }
+    })
+    .catch((err) => {
+      return callback(null, err)
+    })
+  } catch (e) {
+    return callback(null, err)
+  }
+};
 
 const validateUser = (decoded, request, callback) => {
   // This is a simple check that the `sub` claim
@@ -97,7 +101,14 @@ server.register(jwt, err => {
       issuer: `https://${process.env.AUTH0_DOMAIN}/`,
       algorithms: ['RS256']
     },
-    validateFunc: validateUser
+    verifyFunc: validateUser
+  });
+
+  server.auth.strategy('local', 'jwt', { 
+    complete: true,
+    key: secret(),
+    validateFunc: validateLocalUser,
+    verifyOptions: { algorithms: [ 'HS256' ], ignoreExpiration: true }
   });
   // registerRoutes();
   server.route(routes);

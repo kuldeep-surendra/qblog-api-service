@@ -1,10 +1,11 @@
 const postsController = require('../handlers/postsHandler')
 const usersController = require('../handlers/usersHandler')
+const Joi = require('joi');
 
 const welcomeRoute = [{
   method: "GET",
   path: "/",
-  // config: { auth: 'jwt' },
+  // config: { auth: 'local' },
   handler: (req, reply) => {
     reply("hello !!!!");
   }
@@ -21,7 +22,9 @@ const postsRoutes = [
     method: 'GET',
     path: '/posts',
     config: {
-      auth: 'jwt',
+      auth: {
+        strategies: ['local', 'jwt']
+      },
       cors: corsHeader,
       handler: postsController.index
     }
@@ -30,7 +33,9 @@ const postsRoutes = [
     method: 'POST',
     path: '/posts',
     config: {
-      auth: 'jwt',
+      auth: {
+        strategies: ['local', 'jwt']
+      },
       cors: corsHeader,
       handler: postsController.create
     }
@@ -39,7 +44,9 @@ const postsRoutes = [
     method: 'GET',
     path: '/posts/{id}',
     config: {
-      auth: 'jwt',
+      auth: {
+        strategies: ['local', 'jwt']
+      },
       cors: corsHeader,
       handler: postsController.show
     }
@@ -48,7 +55,9 @@ const postsRoutes = [
     method: 'DELETE',
     path: '/posts/{id}',
     config: {
-      auth: 'jwt',
+      auth: {
+        strategies: ['local', 'jwt']
+      },
       cors: corsHeader,
       handler: postsController.delete
     }
@@ -57,7 +66,9 @@ const postsRoutes = [
     method: 'PUT',
     path: '/posts/{id}',
     config: {
-      auth: 'jwt',
+      auth: {
+        strategies: ['local', 'jwt']
+      },
       cors: corsHeader,
       handler: postsController.update
     }
@@ -73,6 +84,15 @@ const usersRoutes = [
       auth: false,
       handler: usersController.createUser
     }
+  },
+  {
+    method: "POST",
+    path: "/login",
+    config: {
+      cors: corsHeader,
+      auth: false
+    },
+    handler: usersController.login
   }
 ];
 module.exports = [].concat(welcomeRoute, postsRoutes, usersRoutes);
