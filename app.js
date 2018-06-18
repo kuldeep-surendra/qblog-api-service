@@ -101,7 +101,7 @@ server.register(jwt, err => {
       issuer: `https://${process.env.AUTH0_DOMAIN}/`,
       algorithms: ['RS256']
     },
-    verifyFunc: validateUser
+    validateFunc: validateUser
   });
 
   server.auth.strategy('local', 'jwt', { 

@@ -23,7 +23,7 @@ const postsRoutes = [
     path: '/posts',
     config: {
       auth: {
-        strategies: ['local', 'jwt']
+        strategies: ['jwt', 'local']
       },
       cors: corsHeader,
       handler: postsController.index
@@ -34,7 +34,7 @@ const postsRoutes = [
     path: '/posts',
     config: {
       auth: {
-        strategies: ['local', 'jwt']
+        strategies: ['jwt', 'local']
       },
       cors: corsHeader,
       handler: postsController.create
@@ -45,7 +45,7 @@ const postsRoutes = [
     path: '/posts/{id}',
     config: {
       auth: {
-        strategies: ['local', 'jwt']
+        strategies: ['jwt', 'local']
       },
       cors: corsHeader,
       handler: postsController.show
@@ -56,7 +56,7 @@ const postsRoutes = [
     path: '/posts/{id}',
     config: {
       auth: {
-        strategies: ['local', 'jwt']
+        strategies: ['jwt', 'local']
       },
       cors: corsHeader,
       handler: postsController.delete
@@ -67,7 +67,7 @@ const postsRoutes = [
     path: '/posts/{id}',
     config: {
       auth: {
-        strategies: ['local', 'jwt']
+        strategies: ['jwt', 'local']
       },
       cors: corsHeader,
       handler: postsController.update
