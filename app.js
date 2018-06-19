@@ -97,7 +97,7 @@ server.register(jwt, err => {
       jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`
     }),
     verifyOptions: {
-      audience: process.env.AUTH0_AUDIENCE,
+      audience:  process.env.NODE_ENV === 'development' ? process.env.AUTH0_AUDIENCE_DEV : process.env.AUTH0_AUDIENCE_PROD,
       issuer: `https://${process.env.AUTH0_DOMAIN}/`,
       algorithms: ['RS256']
     },
